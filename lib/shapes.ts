@@ -1,4 +1,4 @@
-import { ZodType, z } from 'zod/v4'
+import { type ZodType, z } from 'zod/v4'
 import type { $ZodType, $ZodTypes } from 'zod/v4/core'
 import type { Branded, Custom, Scope, Scoped } from './types'
 
@@ -9,24 +9,36 @@ export function brand<Brand extends string, Strict extends boolean>(name: Brand,
 	}
 }
 
-export function custom<Type, Token extends string>(token: Token) {
-	const custom = z.custom<Type>()
-	custom._zod.def.token = token
-	return custom as Custom<Type, Token>
+export function custom<Type, Token extends string>(token: Token): Custom<Type, Token> {
+	const type = z.custom<Type>()
+	type._zod.def.extended = {
+		token,
+		type: 'custom'
+	}
+
+	return type as Custom<Type, Token>
 }
 
 export function scope<
-	Type extends ZodType,
+	Inner extends ZodType,
 	Name extends string,
 	Context extends Record<string, $ZodType>
->(type: Type, scope: { name: Name; context: Context }) {
-	return new ZodType({ ...type._zod.def, scope }) as Scoped<Type, Name, Context>
+>(inner: Inner, name: Name, context: Context) {
+	const type = z.custom<(params: { [K in keyof Context]: z.infer<Context[K]> }) => z.infer<Inner>>()
+	type._zod.def.extended = {
+		inner,
+		scope: {
+			context,
+			name
+		},
+		type: 'scoped'
+	}
+
+	return type as Scoped<Inner, Name, Context>
 }
 
-export function shapeOf(type: $ZodType, _scope?: Scope): string {
+export function shapeOf(type: $ZodType, scope?: Scope): string {
 	const def = (type as $ZodTypes)._zod.def
-
-	const scope = _scope ?? def.scope
 
 	function shape() {
 		switch (def.type) {
@@ -66,7 +78,15 @@ export function shapeOf(type: $ZodType, _scope?: Scope): string {
 				return `_Union(${def.options.map(option => shapeOf(option, scope)).join(',')})`
 			}
 			case 'custom': {
-				return `_Custom(${def.token})`
+				switch (def.extended.type) {
+					case 'custom': {
+						return `_Custom(${def.extended.token})`
+					}
+					case 'scoped': {
+						return shapeOf(def.extended.inner, def.extended.scope)
+					}
+				}
+				break
 			}
 			default: {
 				throw `${def.type} not supported`
@@ -75,6 +95,9 @@ export function shapeOf(type: $ZodType, _scope?: Scope): string {
 	}
 
 	if (scope) {
+		if (def.brand) {
+			return `_Scoped(${scope.name},_Branded(${def.brand.name},${shape()}))`
+		}
 		return `_Scoped(${scope.name},${shape()})`
 	}
 

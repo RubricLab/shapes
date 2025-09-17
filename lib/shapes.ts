@@ -107,3 +107,69 @@ export function shapeOf(type: $ZodType, scope?: Scope): string {
 
 	return shape()
 }
+
+export function metaZod(type: $ZodType) {
+	function shape(type: $ZodType) {
+		const def = (type as $ZodTypes)._zod.def
+
+		switch (def.type) {
+			case 'string': {
+				return 'z.string()'
+			}
+			case 'number': {
+				return 'z.number()'
+			}
+			case 'boolean': {
+				return 'z.boolean()'
+			}
+			case 'undefined': {
+				return 'z.undefined()'
+			}
+			case 'null': {
+				return 'z.null()'
+			}
+			case 'literal': {
+				return `z.literal("${def.values[0]}")`
+			}
+			case 'enum': {
+				return `z.enum([${Object.values(def.entries)
+					.map(value => `"${value}"`)
+					.join(',')}])`
+			}
+			case 'array': {
+				return `z.array(${shape(def.element)})`
+			}
+			case 'tuple': {
+				return `z.tuple([${def.items.map(item => shape(item)).join(',')}])`
+			}
+			case 'object': {
+				return `z.object({${Object.entries(def.shape)
+					.map(([key, value]) => `${key}:${shape(value)}`)
+					.join(',')}})`
+			}
+			case 'union': {
+				return `z.union([${def.options.map(option => shape(option)).join(',')}])`
+			}
+
+			case 'optional': {
+				return `${shape(def.innerType)}.optional()`
+			}
+
+			case 'nullable': {
+				return `${shape(def.innerType)}.nullable()`
+			}
+
+			case 'default': {
+				return `${shape(def.innerType)}.default(${def.defaultValue})`
+			}
+			case 'date': {
+				return 'z.date()'
+			}
+
+			default: {
+				throw `${def.type} not supported`
+			}
+		}
+	}
+	return shape(type)
+}

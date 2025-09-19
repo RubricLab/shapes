@@ -1,3 +1,4 @@
+- [2025-09-19] [Return-type stringify function](https://github.com/rubriclab/shapes/commit/e1533f6af045115b549a9df8569ac1fd702e9a4a)
 - [2025-09-17] [bump](https://github.com/RubricLab/shapes/commit/f65e4d6300f3cb7e67feb7fd979e0355f2170184)
 - [2025-07-25] [rework scoped shape](https://github.com/RubricLab/shapes/commit/76f70ee65df6547626cc37b03713b4e0d8b65d23)
 - [2025-07-24] [add gitignore](https://github.com/RubricLab/shapes/commit/898ca78f854d62764f83244e6abf8f8882cb9516)

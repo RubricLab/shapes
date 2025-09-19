@@ -109,7 +109,7 @@ export function shapeOf(type: $ZodType, scope?: Scope): string {
 }
 
 export function metaZod(type: $ZodType) {
-	function shape(type: $ZodType) {
+	function shape(type: $ZodType): string {
 		const def = (type as $ZodTypes)._zod.def
 
 		switch (def.type) {
@@ -171,5 +171,6 @@ export function metaZod(type: $ZodType) {
 			}
 		}
 	}
+	
 	return shape(type)
 }

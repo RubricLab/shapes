@@ -77,6 +77,15 @@ export function shapeOf(type: $ZodType, scope?: Scope): string {
 			case 'union': {
 				return `_Union(${def.options.map(option => shapeOf(option, scope)).join(',')})`
 			}
+			case 'default': {
+				return shapeOf(def.innerType, scope)
+			}
+			case 'nullable': {
+				return shapeOf(def.innerType, scope)
+			}
+			case 'optional': {
+				return shapeOf(def.innerType, scope)
+			}
 			case 'custom': {
 				switch (def.extended.type) {
 					case 'custom': {
@@ -150,27 +159,23 @@ export function metaZod(type: $ZodType) {
 			case 'union': {
 				return `z.union([${def.options.map(option => shape(option)).join(',')}])`
 			}
-
 			case 'optional': {
 				return `${shape(def.innerType)}.optional()`
 			}
-
 			case 'nullable': {
 				return `${shape(def.innerType)}.nullable()`
 			}
-
 			case 'default': {
 				return `${shape(def.innerType)}.default(${def.defaultValue})`
 			}
 			case 'date': {
 				return 'z.date()'
 			}
-
 			default: {
 				throw `${def.type} not supported`
 			}
 		}
 	}
-	
+
 	return shape(type)
 }
